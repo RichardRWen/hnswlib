@@ -1267,8 +1267,22 @@ class HierarchicalNSW : public AlgorithmInterface<dist_t> {
     }
 
 
-    std::priority_queue<std::pair<dist_t, labeltype >>
+    
+    std::priority_queue<std::pair<dist_t, labeltype>>
     searchKnn(const void *query_data, size_t k, BaseFilterFunctor* isIdAllowed = nullptr) const {
+        return searchKnnImpl<false>(query_data, k, isIdAllowed);
+    }
+
+
+    std::priority_queue<std::pair<dist_t, labeltype>>
+    searchKnnWithMetrics(const void *query_data, size_t k, BaseFilterFunctor* isIdAllowed = nullptr) const {
+        return searchKnnImpl<true>(query_data, k, isIdAllowed);
+    }
+
+
+    template <bool collect_metrics = false>
+    std::priority_queue<std::pair<dist_t, labeltype>>
+    searchKnnImpl(const void *query_data, size_t k, BaseFilterFunctor* isIdAllowed = nullptr) const {
         std::priority_queue<std::pair<dist_t, labeltype >> result;
         if (cur_element_count == 0) return result;
 
@@ -1305,10 +1319,10 @@ class HierarchicalNSW : public AlgorithmInterface<dist_t> {
         std::priority_queue<std::pair<dist_t, tableint>, std::vector<std::pair<dist_t, tableint>>, CompareByFirst> top_candidates;
         bool bare_bone_search = !num_deleted_ && !isIdAllowed;
         if (bare_bone_search) {
-            top_candidates = searchBaseLayerST<true>(
+            top_candidates = searchBaseLayerST<true, collect_metrics>(
                     currObj, query_data, std::max(ef_, k), isIdAllowed);
         } else {
-            top_candidates = searchBaseLayerST<false>(
+            top_candidates = searchBaseLayerST<false, collect_metrics>(
                     currObj, query_data, std::max(ef_, k), isIdAllowed);
         }
 
